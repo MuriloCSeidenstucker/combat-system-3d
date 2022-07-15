@@ -5,23 +5,26 @@ using UnityEngine.Assertions;
 public class CharacterMovement : MonoBehaviour
 {
     [Header("Movement Settings")]
-    [SerializeField] private float _movementSpeed = 10.0f;
+    [SerializeField] private float _maxGroundSpeed = 10.0f;
     [SerializeField] private float _movementAcc = 100.0f;
     [SerializeField] private float _rotationAcc = 10.0f;
 
     [Header("Ground Collision Settings")]
-    [SerializeField] LayerMask groundedLayerMask = default;
-    [SerializeField] float groundedRaycastDistance = 0.1f;
+    [SerializeField] LayerMask _groundedLayerMask = default;
+    [SerializeField] float _groundedRaycastDistance = 0.1f;
 
     private Rigidbody _rigidbody;
     private Vector3 _currentVelocity = Vector3.zero;
     private Quaternion _currentRotation = Quaternion.identity;
 
-    bool isGrounded;
-    bool wasGroundedLastFrame;
+    private bool _isGrounded;
+    private bool _wasGroundedLastFrame;
+    private int _raycastCount = 5;
+    private Vector3[] _raycastPositions;
+    private RaycastHit[] _groundHits;
 
     public IColliderInfo ColliderInfo { get; private set; }
-    public bool IsGrounded { get { return isGrounded == wasGroundedLastFrame && isGrounded; } }
+    public bool IsGrounded { get { return _isGrounded == _wasGroundedLastFrame && _isGrounded; } }
     public bool IsJumping { get { return _currentVelocity.y > 0; } }
 
     private void Awake()
@@ -30,6 +33,9 @@ public class CharacterMovement : MonoBehaviour
 
         Collider thisCollider = GetComponent<Collider>();
         ColliderInfo = ColliderInfoFactory.NewColliderInfo(thisCollider);
+
+        _raycastPositions = new Vector3[_raycastCount];
+        _groundHits = new RaycastHit[_raycastCount];
     }
 
     private void FixedUpdate()
@@ -37,7 +43,7 @@ public class CharacterMovement : MonoBehaviour
         RotateCharacter();
         MoveCharacter();
 
-        CheckCapsuleCollisionsBottom();
+        CheckGroundCollision();
     }
 
     private void MoveCharacter()
@@ -59,37 +65,33 @@ public class CharacterMovement : MonoBehaviour
         _rigidbody.MoveRotation(_currentRotation.normalized);
     }
 
-    private void CheckCapsuleCollisionsBottom()
+    private void CheckGroundCollision()
     {
-        int raycastCount = 5;
-        Vector3[] raycastPositions = new Vector3[raycastCount];
+        _raycastPositions[0] = GetColliderBottom();
+        _raycastPositions[1] = GetColliderBottom() + Vector3.left * ColliderInfo.Radius * 0.5f;
+        _raycastPositions[2] = GetColliderBottom() + Vector3.right * ColliderInfo.Radius * 0.5f;
+        _raycastPositions[3] = GetColliderBottom() + Vector3.forward * ColliderInfo.Radius * 0.5f;
+        _raycastPositions[4] = GetColliderBottom() + Vector3.back * ColliderInfo.Radius * 0.5f;
 
-        raycastPositions[0] = GetColliderBottom();
-        raycastPositions[1] = GetColliderBottom() + Vector3.left * ColliderInfo.Radius * 0.5f;
-        raycastPositions[2] = GetColliderBottom() + Vector3.right * ColliderInfo.Radius * 0.5f;
-        raycastPositions[3] = GetColliderBottom() + Vector3.forward * ColliderInfo.Radius * 0.5f;
-        raycastPositions[4] = GetColliderBottom() + Vector3.back * ColliderInfo.Radius * 0.5f;
-
-        RaycastHit[] hitBuffer = new RaycastHit[5];
-        float raycastDistance = ColliderInfo.Radius * 0.5f + groundedRaycastDistance * 2f;
+        float raycastDistance = ColliderInfo.Radius * 0.5f + _groundedRaycastDistance;
         Vector3 raycastDirection = Vector3.down;
 
-        wasGroundedLastFrame = isGrounded;
-        isGrounded = false;
+        _wasGroundedLastFrame = _isGrounded;
+        _isGrounded = false;
 
         int hitCount = 0;
-        for (int i = 0; i < raycastPositions.Length; i++)
+        for (int i = 0; i < _raycastPositions.Length; i++)
         {
-            Debug.DrawLine(raycastPositions[i], raycastPositions[i] + raycastDirection * raycastDistance);
-            if (Physics.RaycastNonAlloc(raycastPositions[i], raycastDirection, hitBuffer, raycastDistance, groundedLayerMask, QueryTriggerInteraction.Ignore) > 0)
+            Debug.DrawLine(_raycastPositions[i], _raycastPositions[i] + raycastDirection * raycastDistance);
+            if (Physics.RaycastNonAlloc(_raycastPositions[i], raycastDirection, _groundHits, raycastDistance, _groundedLayerMask, QueryTriggerInteraction.Ignore) > 0)
             {
                 ++hitCount;
             }
         }
 
-        isGrounded = _currentVelocity.magnitude > 10.0f ? hitCount == 3 : hitCount > 0;
+        _isGrounded = _currentVelocity.magnitude > _maxGroundSpeed ? hitCount == _raycastCount : hitCount > 0;
 
-        if (isGrounded && !IsJumping)
+        if (_isGrounded && !IsJumping)
         {
             _currentVelocity.y = 0;
         }
@@ -102,7 +104,9 @@ public class CharacterMovement : MonoBehaviour
 
     public void SetVelocity(Vector3 velocityInput)
     {
-        Vector3 desiredVelocity = velocityInput.normalized * _movementSpeed;
+        if (!IsGrounded) return;
+
+        Vector3 desiredVelocity = velocityInput.normalized * _maxGroundSpeed;
         _currentVelocity = Vector3.MoveTowards(_currentVelocity, desiredVelocity, _movementAcc * Time.deltaTime);
     }
 

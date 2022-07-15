@@ -3,6 +3,14 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "DevelopmentSettings", menuName = "Data/DevelopmentSettings")]
 public class DevelopmentSettings : ScriptableObject
 {
+    #region GameMode
+    [field: Header("Player Settings")]
+
+    [field: SerializeField]
+    public bool StartGamePaused { get; private set; } = false;
+    #endregion
+
+
     #region Player
     [field: Header("Player Settings")]
 

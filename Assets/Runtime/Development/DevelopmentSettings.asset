@@ -12,3 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd39a6907bec6144a8a857d794126590, type: 3}
   m_Name: DevelopmentSettings
   m_EditorClassIdentifier: 
+  <StartGamePaused>k__BackingField: 0
+  <EnableGizmos>k__BackingField: 0
+  <AutoMove>k__BackingField: 0
+  <LockCameraPosition>k__BackingField: 0

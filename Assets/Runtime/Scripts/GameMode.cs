@@ -1,10 +1,16 @@
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class GameMode : MonoBehaviour
 {
+    [Header("Development Settings")]
+    [SerializeField] private DevelopmentSettings _settings;
+
     private void Awake()
     {
+        EditorApplication.isPaused = _settings.StartGamePaused;
+
         Cursor.lockState = CursorLockMode.Locked;
     }
 
