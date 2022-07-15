@@ -6,7 +6,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Transform _graphics;
 
     [Header("Development Settings")]
-    [SerializeField] private bool _enableGizmos = false;
+    [SerializeField] private DevelopmentSettings _settings;
 
     private PlayerInput _playerInput;
     private PlayerInputAction _inputAction;
@@ -33,7 +33,7 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        Vector3 movementInput = GetAndProcessMovementInput();
+        Vector3 movementInput = _settings.AutoMove ? Vector3.forward : GetAndProcessMovementInput();
 
         _playerMovement.SetVelocity(movementInput);
 
@@ -72,7 +72,7 @@ public class PlayerController : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if (Application.isPlaying && _enableGizmos)
+        if (Application.isPlaying && _settings.EnableGizmos)
         {
             Gizmos.color = Color.blue;
             GizmosUtils.DrawVector(_cameraController.transform.position, _cameraController.transform.forward, thickness: 1);

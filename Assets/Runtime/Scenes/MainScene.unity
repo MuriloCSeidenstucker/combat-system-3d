@@ -170,7 +170,7 @@ MonoBehaviour:
   _topClamp: 70
   _bottomClamp: -30
   _cameraAngleOverride: 0
-  _lockCameraPosition: 0
+  _lockCameraPosition: 1
   _horizontalSensitivity: 1
   _verticalSensitivity: 0.5
 --- !u!1 &308766477
@@ -274,6 +274,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _graphics: {fileID: 1356035536}
   _enableGizmos: 0
+  _autoMove: 0
 --- !u!114 &308766483
 MonoBehaviour:
   m_ObjectHideFlags: 0

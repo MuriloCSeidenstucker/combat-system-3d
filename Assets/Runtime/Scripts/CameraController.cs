@@ -6,13 +6,15 @@ public class CameraController : MonoBehaviour
     [SerializeField] private float _topClamp = 70.0f;
     [SerializeField] private float _bottomClamp = -30.0f;
     [SerializeField] private float _cameraAngleOverride = 0.0f;
-    [SerializeField] private bool _lockCameraPosition = false;
 
     [Header("Camera Sensitivity")]
     [Range(0.1f, 5.0f)]
     [Min(0.1f)][SerializeField] private float _horizontalSensitivity = 1.0f;
     [Range(0.1f, 5.0f)]
     [Min(0.1f)][SerializeField] private float _verticalSensitivity = 1.0f;
+
+    [Header("Development Settings")]
+    [SerializeField] private DevelopmentSettings _settings;
 
     private PlayerController _player;
     private float _cinemachineTargetYaw;
@@ -35,7 +37,7 @@ public class CameraController : MonoBehaviour
     {
         Vector2 lookInput = _player.GetLookInput();
 
-        if (lookInput.sqrMagnitude >= c_threshold && !_lockCameraPosition)
+        if (lookInput.sqrMagnitude >= c_threshold && !_settings.LockCameraPosition)
         {
             float deltaTimeMultiplier = _player.IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
 
