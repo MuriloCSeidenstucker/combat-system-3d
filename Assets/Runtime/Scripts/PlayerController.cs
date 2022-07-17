@@ -37,6 +37,11 @@ public class PlayerController : MonoBehaviour
 
         _playerMovement.SetVelocity(movementInput);
 
+        if (_inputAction.Player.Jump.WasPressedThisFrame())
+        {
+            _playerMovement.Jump();
+        }
+
         UpdateMeshRotation(movementInput);
     }
 
