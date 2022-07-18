@@ -5,13 +5,16 @@ using UnityEngine;
 public class CharacterMovement : MonoBehaviour
 {
     [Header("Movement Settings")]
-    [SerializeField] private float _maxGroundSpeed = 10.0f;
+    [SerializeField] private float _movementSpeed = 10.0f;
     [SerializeField] private float _movementAcc = 100.0f;
     [SerializeField] private float _rotationAcc = 10.0f;
 
     [Header("Jump Settings")]
     [SerializeField] float maxJumpHeight = 4.0f;
     [SerializeField] float jumpPeakTime = 0.4f;
+
+    [Header("Sprint Settings")]
+    [SerializeField] private float _sprintSpeed = 15.0f;
 
     [Header("Ground Collision Settings")]
     [SerializeField] LayerMask _groundedLayerMask = default;
@@ -32,10 +35,12 @@ public class CharacterMovement : MonoBehaviour
     private List<RaycastHit> _groundHits;
     private Vector3[] _raycastPositions;
     private Vector3 _lastFrameVelocity = Vector3.zero;
+    private bool _isSprinting;
 
     public IColliderInfo ColliderInfo { get; private set; }
     public float Gravity { get { return maxJumpHeight * 2 / (jumpPeakTime * jumpPeakTime); } }
     public float JumpSpeed { get { return Gravity * jumpPeakTime; } }
+    public bool IsSprinting { get { return _isSprinting; } }
     public bool IsGrounded { get { return _isGrounded; } }
     public bool IsJumping { get { return _currentVelocity.y > 0; } }
 
@@ -67,6 +72,11 @@ public class CharacterMovement : MonoBehaviour
     }
 
     private bool CanJump()
+    {
+        return IsGrounded && !IsJumping;
+    }
+
+    private bool CanSprint()
     {
         return IsGrounded && !IsJumping;
     }
@@ -150,7 +160,8 @@ public class CharacterMovement : MonoBehaviour
     {
         if (!IsGrounded) return;
 
-        Vector3 desiredVelocity = velocityInput.normalized * _maxGroundSpeed;
+        float targetSpeed = IsSprinting ? _sprintSpeed : _movementSpeed;
+        Vector3 desiredVelocity = velocityInput.normalized * targetSpeed;
         _currentVelocity = Vector3.MoveTowards(_currentVelocity, desiredVelocity, _movementAcc * Time.deltaTime);
     }
 
@@ -165,6 +176,14 @@ public class CharacterMovement : MonoBehaviour
         if (CanJump())
         {
             _currentVelocity.y = JumpSpeed;
+        }
+    }
+
+    public void Sprint(bool sprintInput)
+    {
+        if (CanSprint())
+        {
+            _isSprinting = sprintInput;
         }
     }
 

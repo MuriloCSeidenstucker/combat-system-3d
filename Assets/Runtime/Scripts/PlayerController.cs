@@ -1,9 +1,14 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private Transform _graphics;
+
+    [Header("Gamepad Settings")]
+    //TODO: Check how to implement by new input system.
+    [SerializeField] private float _holdTime = 0.3f;
 
     [Header("Development Settings")]
     [SerializeField] private DevelopmentSettings _settings;
@@ -13,10 +18,11 @@ public class PlayerController : MonoBehaviour
     private CharacterMovement _playerMovement;
     private CameraController _cameraController;
     private Quaternion _currentRotation;
+    private float _sprintTimer;
 
     private const string c_keyboardMouse = "Keyboard&Mouse";
 
-    public bool IsCurrentDeviceMouse => _playerInput.currentControlScheme == c_keyboardMouse;
+    public bool IsCurrentDeviceKeyboardMouse => _playerInput.currentControlScheme == c_keyboardMouse;
 
     private void Awake()
     {
@@ -35,6 +41,9 @@ public class PlayerController : MonoBehaviour
     {
         Vector3 movementInput = _settings.AutoMove ? _currentRotation * Vector3.forward : GetAndProcessMovementInput();
 
+        bool sprintInput = GetSprintInput();
+
+        _playerMovement.Sprint(sprintInput);
         _playerMovement.SetVelocity(movementInput);
 
         if (_inputAction.Player.Jump.WasPressedThisFrame())
@@ -43,6 +52,20 @@ public class PlayerController : MonoBehaviour
         }
 
         UpdateMeshRotation(movementInput);
+    }
+
+    private bool GetSprintInput()
+    {
+        if (IsCurrentDeviceKeyboardMouse) return _inputAction.Player.Sprint.IsPressed();
+
+        if (_inputAction.Player.Sprint.IsPressed())
+            _sprintTimer += Time.deltaTime;
+        else
+            _sprintTimer = 0f;
+
+        if (_sprintTimer >= _holdTime) return true;
+
+        return false;
     }
 
     private Vector3 GetAndProcessMovementInput()

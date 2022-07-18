@@ -39,7 +39,7 @@ public class CameraController : MonoBehaviour
 
         if (lookInput.sqrMagnitude >= c_threshold && !_settings.LockCameraPosition)
         {
-            float deltaTimeMultiplier = _player.IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
+            float deltaTimeMultiplier = _player.IsCurrentDeviceKeyboardMouse ? 1.0f : Time.deltaTime;
 
             _cinemachineTargetYaw += lookInput.x * deltaTimeMultiplier * _horizontalSensitivity;
             _cinemachineTargetPitch += lookInput.y * deltaTimeMultiplier * _verticalSensitivity;

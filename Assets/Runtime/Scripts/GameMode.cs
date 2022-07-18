@@ -9,8 +9,9 @@ public class GameMode : MonoBehaviour
 
     private void Awake()
     {
+#if UNITY_EDITOR
         EditorApplication.isPaused = _settings.StartGamePaused;
-
+#endif
         Cursor.lockState = CursorLockMode.Locked;
     }
 
