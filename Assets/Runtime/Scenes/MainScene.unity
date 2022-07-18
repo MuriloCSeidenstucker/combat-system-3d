@@ -329,7 +329,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 308766477}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.29, y: 1.61, z: -1.76}
+  m_LocalPosition: {x: 11.93, y: 0.91, z: 0.46}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -358,8 +358,12 @@ MonoBehaviour:
   _groundedLayerMask:
     serializedVersion: 2
     m_Bits: 64
-  _groundedRaycastDistance: 0.45
+  _groundedRaycastDistance: 0.7
+  _obstacleLayerMask:
+    serializedVersion: 2
+    m_Bits: 128
   _obstacleRaycastDistance: 0.5
+  _settings: {fileID: 11400000, guid: 3acbfb1a7f8ecec49b53b75f22b16575, type: 2}
 --- !u!114 &308766482
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -770,7 +774,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.49, y: 2.9850001, z: -11.76}
+  m_LocalPosition: {x: 12.13, y: 2.285, z: -9.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -971,7 +975,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1053584485}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.49, y: 2.9850001, z: -11.76}
+  m_LocalPosition: {x: 12.13, y: 2.285, z: -9.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1636,10 +1640,10 @@ MonoBehaviour:
   CameraDistance: 10
   CameraCollisionFilter:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 2147483647
   IgnoreTag: Player
-  CameraRadius: 0.02
-  DampingIntoCollision: 1
+  CameraRadius: 0.1
+  DampingIntoCollision: 0.1
   DampingFromCollision: 2
 --- !u!114 &1735669419
 MonoBehaviour:

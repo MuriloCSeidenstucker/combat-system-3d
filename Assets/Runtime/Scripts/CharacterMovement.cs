@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 [RequireComponent(typeof(Rigidbody))]
 public class CharacterMovement : MonoBehaviour
@@ -14,24 +13,29 @@ public class CharacterMovement : MonoBehaviour
     [SerializeField] float maxJumpHeight = 4.0f;
     [SerializeField] float jumpPeakTime = 0.4f;
 
-    float Gravity { get { return maxJumpHeight * 2 / (jumpPeakTime * jumpPeakTime); } }
-    public float JumpSpeed { get { return Gravity * jumpPeakTime; } }
-
     [Header("Ground Collision Settings")]
     [SerializeField] LayerMask _groundedLayerMask = default;
     [SerializeField] float _groundedRaycastDistance = 0.1f;
+
+    [Header("Obstacle Collision Settings")]
+    [SerializeField] LayerMask _obstacleLayerMask = default;
     [SerializeField] float _obstacleRaycastDistance = 0.1f;
+
+    [Header("Development Settings")]
+    [SerializeField] private DevelopmentSettings _settings;
 
     private Rigidbody _rigidbody;
     private Vector3 _currentVelocity = Vector3.zero;
     private Quaternion _currentRotation = Quaternion.identity;
-
     private bool _isGrounded;
     private int _raycastCount = 5;
     private List<RaycastHit> _groundHits;
     private Vector3[] _raycastPositions;
+    private Vector3 _lastFrameVelocity = Vector3.zero;
 
     public IColliderInfo ColliderInfo { get; private set; }
+    public float Gravity { get { return maxJumpHeight * 2 / (jumpPeakTime * jumpPeakTime); } }
+    public float JumpSpeed { get { return Gravity * jumpPeakTime; } }
     public bool IsGrounded { get { return _isGrounded; } }
     public bool IsJumping { get { return _currentVelocity.y > 0; } }
 
@@ -57,18 +61,12 @@ public class CharacterMovement : MonoBehaviour
 
     void ApplyGravity()
     {
+        if (_isGrounded) return;
+
         _currentVelocity.y -= Gravity * Time.fixedDeltaTime;
     }
 
-    public void Jump()
-    {
-        if (CanJump())
-        {
-            _currentVelocity.y = JumpSpeed;
-        }
-    }
-
-    protected bool CanJump()
+    private bool CanJump()
     {
         return IsGrounded && !IsJumping;
     }
@@ -91,7 +89,7 @@ public class CharacterMovement : MonoBehaviour
 
     private void CheckObstacleCollision()
     {
-        if (Physics.SphereCast(transform.position + Vector3.up * ColliderInfo.Height * 0.5f, ColliderInfo.Radius, _currentVelocity.normalized, out var hit, _obstacleRaycastDistance))
+        if (Physics.SphereCast(transform.position + Vector3.up * ColliderInfo.Height * 0.5f, ColliderInfo.Radius, _currentVelocity.normalized, out var hit, _obstacleRaycastDistance, _obstacleLayerMask))
         {
             Vector3 projectedVelocity = Vector3.ProjectOnPlane(_currentVelocity, hit.normal);
             _currentVelocity = projectedVelocity.normalized * _currentVelocity.magnitude;
@@ -100,11 +98,18 @@ public class CharacterMovement : MonoBehaviour
 
     private void CheckGroundCollision()
     {
+        if (_currentVelocity.x != 0f || _currentVelocity.z != 0f)
+        {
+            _lastFrameVelocity = new Vector3(_currentVelocity.x, 0f, _currentVelocity.z).normalized;
+        }
+
+        Vector3 right = Vector3.Cross(Vector3.up, _lastFrameVelocity);
+
         _raycastPositions[0] = GetColliderBottom();
-        _raycastPositions[1] = GetColliderBottom() + Vector3.right * ColliderInfo.Radius * 0.5f;
-        _raycastPositions[2] = GetColliderBottom() + Vector3.left * ColliderInfo.Radius * 0.5f;
-        _raycastPositions[3] = GetColliderBottom() + Vector3.forward * ColliderInfo.Radius * 0.5f;
-        _raycastPositions[4] = GetColliderBottom() + Vector3.back * ColliderInfo.Radius * 0.5f;
+        _raycastPositions[1] = GetColliderBottom() + right.normalized * ColliderInfo.Radius * 0.5f;
+        _raycastPositions[2] = GetColliderBottom() + -right.normalized * ColliderInfo.Radius * 0.5f;
+        _raycastPositions[3] = GetColliderBottom() + _lastFrameVelocity * ColliderInfo.Radius * 0.5f;
+        _raycastPositions[4] = GetColliderBottom() + -_lastFrameVelocity * ColliderInfo.Radius * 0.5f;
 
         float raycastDistance = (_rigidbody.position - GetColliderBottom()).sqrMagnitude + (_groundedRaycastDistance * _groundedRaycastDistance);
 
@@ -122,13 +127,7 @@ public class CharacterMovement : MonoBehaviour
         Vector3 surfacePosition = _rigidbody.position;
         if (hitCounts > 0)
         {
-            for (int i = 0; i < hitCounts; i++)
-            {
-                if (_groundHits[i].point.y > surfacePosition.y)
-                {
-                    surfacePosition.y = _groundHits[i].point.y;
-                }
-            }
+            surfacePosition.y = _groundHits[0].point.y;
         }
 
         _isGrounded = hitCounts > 0;
@@ -161,9 +160,17 @@ public class CharacterMovement : MonoBehaviour
         _currentRotation = Quaternion.Slerp(_currentRotation, desiredRotation, _rotationAcc * Time.deltaTime);
     }
 
+    public void Jump()
+    {
+        if (CanJump())
+        {
+            _currentVelocity.y = JumpSpeed;
+        }
+    }
+
     private void OnDrawGizmos()
     {
-        if (Application.isPlaying)
+        if (Application.isPlaying && _settings.EnableGizmos)
         {
             Gizmos.color = Color.magenta;
             Vector3 pos = (transform.position + Vector3.up * ColliderInfo.Height * 0.5f) + _currentVelocity.normalized * _obstacleRaycastDistance;

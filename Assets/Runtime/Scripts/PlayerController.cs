@@ -33,7 +33,7 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        Vector3 movementInput = _settings.AutoMove ? Vector3.forward : GetAndProcessMovementInput();
+        Vector3 movementInput = _settings.AutoMove ? _currentRotation * Vector3.forward : GetAndProcessMovementInput();
 
         _playerMovement.SetVelocity(movementInput);
 
