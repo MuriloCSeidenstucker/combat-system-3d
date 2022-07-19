@@ -10,11 +10,13 @@ public class CharacterMovement : MonoBehaviour
     [SerializeField] private float _rotationAcc = 10.0f;
 
     [Header("Jump Settings")]
-    [SerializeField] float maxJumpHeight = 4.0f;
-    [SerializeField] float jumpPeakTime = 0.4f;
+    [SerializeField] private float _maxJumpHeight = 4.0f;
+    [SerializeField] private float _jumpPeakTime = 0.4f;
+    [SerializeField] private float _jumpStaminaDrainValue = 10.0f;
 
     [Header("Sprint Settings")]
     [SerializeField] private float _sprintSpeed = 15.0f;
+    [SerializeField] private float _sprintStaminaDrainValue = 2.0f;
 
     [Header("Ground Collision Settings")]
     [SerializeField] LayerMask _groundedLayerMask = default;
@@ -27,6 +29,7 @@ public class CharacterMovement : MonoBehaviour
     [Header("Development Settings")]
     [SerializeField] private DevelopmentSettings _settings;
 
+    private CharacterStats _stats;
     private Rigidbody _rigidbody;
     private Vector3 _currentVelocity = Vector3.zero;
     private Quaternion _currentRotation = Quaternion.identity;
@@ -38,14 +41,15 @@ public class CharacterMovement : MonoBehaviour
     private bool _isSprinting;
 
     public IColliderInfo ColliderInfo { get; private set; }
-    public float Gravity { get { return maxJumpHeight * 2 / (jumpPeakTime * jumpPeakTime); } }
-    public float JumpSpeed { get { return Gravity * jumpPeakTime; } }
+    public float Gravity { get { return _maxJumpHeight * 2 / (_jumpPeakTime * _jumpPeakTime); } }
+    public float JumpSpeed { get { return Gravity * _jumpPeakTime; } }
     public bool IsSprinting { get { return _isSprinting; } }
     public bool IsGrounded { get { return _isGrounded; } }
     public bool IsJumping { get { return _currentVelocity.y > 0; } }
 
     private void Awake()
     {
+        _stats = GetComponent<CharacterStats>();
         _rigidbody = GetComponent<Rigidbody>();
 
         Collider thisCollider = GetComponent<Collider>();
@@ -73,12 +77,12 @@ public class CharacterMovement : MonoBehaviour
 
     private bool CanJump()
     {
-        return IsGrounded && !IsJumping;
+        return IsGrounded && !IsJumping && _stats.CurrentStamina > _jumpStaminaDrainValue;
     }
 
     private bool CanSprint()
     {
-        return IsGrounded && !IsJumping;
+        return IsGrounded && !IsJumping && _stats.CurrentStamina > 0;
     }
 
     private void MoveCharacter()
@@ -175,17 +179,25 @@ public class CharacterMovement : MonoBehaviour
     {
         if (CanJump())
         {
+            _stats.DrainStamina(_jumpStaminaDrainValue, StaminaDrainMode.Instant);
             _currentVelocity.y = JumpSpeed;
         }
     }
 
-    public void Sprint(bool sprintInput)
+    public void Sprint()
     {
         if (CanSprint())
         {
-            _isSprinting = sprintInput;
+            _stats.DrainStamina(_sprintStaminaDrainValue, StaminaDrainMode.Constant);
+            _isSprinting = true;
+        }
+        else
+        {
+            StopSprint();
         }
     }
+
+    public void StopSprint() => _isSprinting = false;
 
     private void OnDrawGizmos()
     {

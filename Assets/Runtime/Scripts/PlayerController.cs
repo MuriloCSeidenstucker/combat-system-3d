@@ -41,9 +41,16 @@ public class PlayerController : MonoBehaviour
     {
         Vector3 movementInput = _settings.AutoMove ? _currentRotation * Vector3.forward : GetAndProcessMovementInput();
 
-        bool sprintInput = GetSprintInput();
+        if (GetSprintInput())
+        {
+            _playerMovement.Sprint();
+        }
 
-        _playerMovement.Sprint(sprintInput);
+        if (_inputAction.Player.Sprint.WasReleasedThisFrame())
+        {
+            _playerMovement.StopSprint();
+        }
+
         _playerMovement.SetVelocity(movementInput);
 
         if (_inputAction.Player.Jump.WasPressedThisFrame())
