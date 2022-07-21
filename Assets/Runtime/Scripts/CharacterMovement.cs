@@ -179,7 +179,7 @@ public class CharacterMovement : MonoBehaviour
     {
         if (CanJump())
         {
-            _stats.DrainStamina(_jumpStaminaDrainValue, StaminaDrainMode.Instant);
+            _stats.DrainStamina(_jumpStaminaDrainValue, DrainMode.Instant);
             _currentVelocity.y = JumpSpeed;
         }
     }
@@ -188,7 +188,7 @@ public class CharacterMovement : MonoBehaviour
     {
         if (CanSprint())
         {
-            _stats.DrainStamina(_sprintStaminaDrainValue, StaminaDrainMode.Constant);
+            _stats.DrainStamina(_sprintStaminaDrainValue, DrainMode.Constant);
             _isSprinting = true;
         }
         else

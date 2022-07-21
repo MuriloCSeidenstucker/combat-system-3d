@@ -1,15 +1,15 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum StaminaDrainMode
+public enum DrainMode
 {
     Constant, Instant
 }
 
 public class CharacterStats : MonoBehaviour
 {
+    [Header("Health Settings")]
     [SerializeField] private float _maxHealth = 100.0f;
-    [SerializeField] private float _maxStance = 100.0f;
 
     [Header("Stamina Settings")]
     [SerializeField] private float _maxStamina = 100.0f;
@@ -19,23 +19,22 @@ public class CharacterStats : MonoBehaviour
 
     //TODO: Implement component to handle UI.
     [Header("UI Settings")]
+    [SerializeField] private Slider _healthBar;
     [SerializeField] private Slider _staminaBar;
 
     private float _currentHealth;
     private float _currentStamina;
-    private float _currentStance;
-    private float _staminaRegenTimer = 0f;
+    private float _staminaRegenTimer;
 
     public float CurrentHealth { get => _currentHealth; private set => _currentHealth = value; }
     public float CurrentStamina { get => _currentStamina; private set => _currentStamina = value; }
-    public float CurrentStance { get => _currentStance; private set => _currentStance = value; }
 
     private void Awake()
     {
         _currentHealth = _maxHealth;
         _currentStamina = _maxStamina;
-        _currentStance = _maxStance;
 
+        _healthBar.maxValue = _maxHealth;
         _staminaBar.maxValue = _maxStamina;
     }
 
@@ -49,6 +48,7 @@ public class CharacterStats : MonoBehaviour
 
     private void LateUpdate()
     {
+        _healthBar.value = _currentHealth;
         _staminaBar.value = _currentStamina;
     }
 
@@ -61,23 +61,45 @@ public class CharacterStats : MonoBehaviour
 
     private bool CanRegenerateStamina()
     {
-        _staminaRegenTimer += Time.deltaTime;
-
-        return _staminaRegenTimer >= _staminaTimeToRegen;
+        return Time.time >= _staminaRegenTimer;
     }
 
-    public void DrainStamina(float value, StaminaDrainMode drainMode)
+    public void RegenerateHealth(float value)
     {
-        if (_currentStamina <= 0f) return;
+        var currentHealth = _currentHealth;
+        currentHealth += value;
+        _currentHealth = currentHealth > _maxHealth ? _maxHealth : currentHealth;
+    }
 
-        _staminaRegenTimer = 0f;
+    public void DrainHealth(float value, DrainMode drainMode)
+    {
+        if (_currentHealth <= 0f) return;
 
         switch (drainMode)
         {
-            case StaminaDrainMode.Constant:
+            case DrainMode.Constant:
+                _currentHealth -= value * Time.deltaTime;
+                break;
+            case DrainMode.Instant:
+                _currentHealth -= value;
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void DrainStamina(float value, DrainMode drainMode)
+    {
+        if (_currentStamina <= 0f) return;
+
+        _staminaRegenTimer = Time.time + _staminaTimeToRegen;
+
+        switch (drainMode)
+        {
+            case DrainMode.Constant:
                 _currentStamina -= value * Time.deltaTime;
                 break;
-            case StaminaDrainMode.Instant:
+            case DrainMode.Instant:
                 _currentStamina -= value;
                 break;
             default:

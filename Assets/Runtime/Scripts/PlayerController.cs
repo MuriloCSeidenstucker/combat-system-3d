@@ -16,12 +16,17 @@ public class PlayerController : MonoBehaviour
     private PlayerInput _playerInput;
     private PlayerInputAction _inputAction;
     private CharacterMovement _playerMovement;
+    private CharacterStats _playerStats;
     private CameraController _cameraController;
+    private PlayerSword _sword;
     private Quaternion _currentRotation;
+    private Vector3 _currentForward;
     private float _sprintTimer;
 
     private const string c_keyboardMouse = "Keyboard&Mouse";
 
+    public Quaternion CurrentRotation => _currentRotation;
+    public Vector3 CurrentForward => _currentForward;
     public bool IsCurrentDeviceKeyboardMouse => _playerInput.currentControlScheme == c_keyboardMouse;
 
     private void Awake()
@@ -29,7 +34,9 @@ public class PlayerController : MonoBehaviour
         _playerInput = GetComponent<PlayerInput>();
         _inputAction = new PlayerInputAction();
         _playerMovement = GetComponent<CharacterMovement>();
+        _playerStats = GetComponent<CharacterStats>();
         _cameraController = GetComponentInChildren<CameraController>();
+        _sword = GetComponentInChildren<PlayerSword>();
     }
 
     private void OnEnable()
@@ -39,6 +46,11 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (_inputAction.Player.Attack.WasPressedThisFrame())
+        {
+            _sword.Attack();
+        }
+
         Vector3 movementInput = _settings.AutoMove ? _currentRotation * Vector3.forward : GetAndProcessMovementInput();
 
         if (GetSprintInput())
@@ -86,8 +98,8 @@ public class PlayerController : MonoBehaviour
 
     private void UpdatePlayerRotation()
     {
-        Vector3 desiredForward = Vector3.ProjectOnPlane(_cameraController.transform.forward, Vector3.up);
-        _currentRotation = Quaternion.LookRotation(desiredForward);
+        _currentForward = Vector3.ProjectOnPlane(_cameraController.transform.forward, Vector3.up);
+        _currentRotation = Quaternion.LookRotation(_currentForward);
     }
 
     private void UpdateMeshRotation(in Vector3 movementInput)
